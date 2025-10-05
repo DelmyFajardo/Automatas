@@ -13,9 +13,15 @@ Funcionalidades
 - Buscador de patrones con Regex
 - Generador de palabras desde gramáticas
 
-Requisitos
-- Python 
-- Librerías: [Por definir]
+# Requisitos
+- *Python 3.10 o superior*
+- Sistema operativo compatible con *Tkinter* (Windows, macOS o Linux) 
+
+# Librerias
+
+| Librería | Instalación | Descripción |
+|-----------|--------------|-------------|
+| tkinter | (incluida con Python) | Interfaz gráfica para la aplicación
 
 # Indicaciones:
 1. La carpeta src es en la que irá el código fuente del proyecto
