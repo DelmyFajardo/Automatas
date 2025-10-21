@@ -18,6 +18,96 @@ GRAMATICA_CONTRASENA = {
     }
 }
 
+
+GRAMATICA_EMAIL = {
+    "nombre": "CorreoElectronicoBasico",
+    "simbolo_inicial": "<Email>",
+    "producciones": {
+        "<Email>": [
+            "<LocalPart>@<DomainPart>.<TLD>"
+        ],
+        
+        # --- Parte Local (Nombre de usuario) ---
+        # Permite letras/numeros, punto (.), y guion bajo (_)
+        "<LocalPart>": [
+            "<LocalChar>", 
+            "<LocalPart><LocalChar>",
+            "<LocalPart><LocalSep>" # Permite separadores internos
+        ],
+        
+        # Símbolos terminales permitidos en la Parte Local (ej: usuario.nombre_123)
+        "<LocalChar>": [
+            * [chr(i) for i in range(ord('a'), ord('z') + 1)], # Letras minúsculas
+            * [str(i) for i in range(10)],                     # Números
+        ],
+        "<LocalSep>": [
+            ".", "_"
+        ],
+
+        # --- Parte Dominio ---
+        # El dominio puede ser multinivel (ej: sub.dominio.com)
+        "<DomainPart>": [
+            "<DomainSub>",
+            "<DomainSub>.<DomainPart>" # Recursividad para subdominios
+        ],
+        "<DomainSub>": [
+            "<DomainChar>", 
+            "<DomainSub><DomainChar>" # Mínimo un caracter
+        ],
+        
+        # Símbolos terminales permitidos en la Parte Dominio (solo letras y números)
+        "<DomainChar>": [
+            * [chr(i) for i in range(ord('a'), ord('z') + 1)],
+            * [str(i) for i in range(10)],
+        ],
+        
+        # --- TLD (Top-Level Domain) ---
+        "<TLD>": [
+            "com", "net", "org", "co", "io", "gob"
+        ]
+    }
+}
+
+GRAMATICA_IPV4 = {
+    "nombre": "DireccionIPv4",
+    "simbolo_inicial": "<IPv4>",
+    "producciones": {
+        "<IPv4>": [
+            "<Octeto>.<Octeto>.<Octeto>.<Octeto>"
+        ],
+        
+        # --- Octeto (Representa un número entre 0 y 255) ---
+        # Dividido en reglas para aproximar el rango 0-255.
+        "<Octeto>": [
+            # 1. Números de 1 o 2 dígitos (0-99)
+            "<Cifra>", 
+            "<Cifra><Cifra>", 
+            
+            # 2. Números de 100 a 199
+            "1<Cifra><Cifra>", 
+            
+            # 3. Números de 200 a 249
+            "2<Cifra20_49>", 
+            
+            # 4. Números de 250 a 255
+            "25<Cifra0_5>" 
+        ],
+        
+        # Terminales: Cifras
+        "<Cifra>": [str(i) for i in range(10)],             # 0 a 9
+        "<Cifra20_49>": [str(i) for i in range(10)],        # 0 a 9 (para 200-209, 210-219, etc.)
+        "<Cifra0_5>": [str(i) for i in range(6)],           # 0 a 5
+        
+        # Nota: La regla de 200 a 249 se simplifica como 2XX. La lógica real 
+        # (200-249) es más compleja y se controla mejor con la longitud máxima.
+        # Si quieres más precisión:
+        # "2<Cifra0_4><Cifra>",  # 200-249
+        # "<Cifra0_4>": [str(i) for i in range(5)], # 0 a 4
+    }
+}
+
+
+
 class GrammarGenerator:
     def __init__(self, grammar_data: Dict):
         self.productions = grammar_data["producciones"]
@@ -119,3 +209,6 @@ if __name__ == '__main__':
         print(f"Generada: {generator1.generate(max_length=10)}")
 
     # Tarea 08/10: Implementar 2 gramáticas más aquí.
+    
+    # Gramática 2: Nombres de Usuario (Ejemplo simplificado)
+  

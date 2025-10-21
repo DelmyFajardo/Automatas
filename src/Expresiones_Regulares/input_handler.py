@@ -19,6 +19,7 @@ def read_text_from_file(file_path: str) -> Optional[str]:
     try:
         # Usar 'utf-8' es estándar y robusto
         with open(file_path, 'r', encoding='utf-8') as f:
+            print(f"INFO: Archivo '{file_path}' leído correctamente.")
             return f.read()
     except IOError as e:
         print(f"ERROR I/O al leer el archivo '{file_path}': {e}")
@@ -71,6 +72,7 @@ def load_source_text(source_identifier: str) -> Optional[str]:
     Función unificada para cargar texto basado en el identificador.
     Prioridad: 1. Archivo Local -> 2. URL -> 3. Texto Directo (no aplica para esta función)
     """
+    print(f"INFO: Cargando texto desde: {source_identifier}")
     if os.path.exists(source_identifier):
         print(f"INFO: Leyendo de archivo local: {source_identifier}")
         return read_text_from_file(source_identifier)

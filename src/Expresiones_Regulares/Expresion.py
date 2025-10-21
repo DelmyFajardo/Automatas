@@ -14,14 +14,31 @@ class ExpresionSearcher:
         self.results: List[MatchResult] = []
 
     def load_text(self, source_identifier: Optional[str] = None) -> bool:
-        """Carga el texto desde archivo, URL o pide entrada manual."""
-        if source_identifier:
-            self.text_content = load_source_text(source_identifier)
-        else:
-            # Si no se da identificador, asume entrada manual
-            self.text_content = get_text_from_manual_input()
+        """Carga el texto desde archivo, URL o pide entrada manual, con manejo de excepciones."""
+        self.text_content = None # Inicializa o limpia el contenido anterior
 
-        return self.text_content is not None and len(self.text_content) > 0
+        try:
+            if source_identifier:
+                # Intenta cargar desde archivo o URL
+                self.text_content = load_source_text(source_identifier)
+            else:
+                # Asume entrada manual
+                self.text_content = get_text_from_manual_input()
+                # La línea de depuración que pusiste:
+                # print("contenido"+self.text_content) 
+
+            # Verificar si se cargó algo
+            if self.text_content is None or len(self.text_content.strip()) == 0:
+                print("ADVERTENCIA: La fuente no contiene texto o la carga falló silenciosamente.")
+                return False
+            
+            return True
+
+        except Exception as e:
+            # Captura cualquier error no manejado por las funciones internas (como problemas de encoding o I/O inesperados)
+            print(f"ERROR FATAL al cargar la fuente de texto: {e}")
+            # NOTA: En la GUI, es mejor usar tkinter.messagebox.showerror en el método execute_search.
+            return False
 
     def execute_search(self) -> List[MatchResult]:
         """Ejecuta la búsqueda si el texto ha sido cargado."""
