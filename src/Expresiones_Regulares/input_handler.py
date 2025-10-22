@@ -25,27 +25,37 @@ def read_text_from_file(file_path: str) -> Optional[str]:
         print(f"ERROR I/O al leer el archivo '{file_path}': {e}")
         return None
 
+# En src/Expresiones_Regulares/input_handler.py
+
 def read_text_from_url(url: str) -> Optional[str]:
     """Descarga el contenido de una URL (Tarea 07/10)."""
     if not HAS_REQUESTS:
         print("ERROR: La lectura de URL requiere la librería 'requests'.")
         return None
     
-    # Validación básica de la URL (más estricta se haría con urllib.parse)
+    # --- LA CORRECCIÓN CLAVE: User-Agent ---
+    # Esto hace que el servidor piense que la solicitud proviene de un navegador Chrome en Windows.
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36'
+    }
+    # ----------------------------------------
+    
     if not url.lower().startswith(('http://', 'https://')):
         print(f"ERROR: La cadena '{url}' no parece una URL válida.")
         return None
 
     try:
-        # Añadir un timeout es crucial en operaciones de red
-        response = requests.get(url, timeout=15) 
+        # Pasa el diccionario 'headers' a la función get
+        response = requests.get(url, headers=headers, timeout=15) 
         # Asegura que el código de estado sea 200 (OK)
         response.raise_for_status() 
 
+        print(f"INFO: Solicitud a {url} exitosa.")
         return response.text 
+        
     except requests.exceptions.RequestException as e:
-        # Captura todos los errores de request (conexión, timeout, HTTP)
-        print(f"ERROR de red al acceder a la URL: {e}")
+        # Muestra el error de red (incluyendo 403, 404, etc.)
+        print(f"ERROR de red al acceder a la URL: {url}. Detalle: {e}")
         return None
 
 def get_text_from_manual_input(prompt: str = "Ingrese el texto a analizar (finalice con Ctrl+D o una línea vacía):") -> str:
