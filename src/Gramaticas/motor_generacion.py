@@ -84,7 +84,7 @@ def generar_varias(gramatica_nombre: str, cantidad: int, max_tokens: int = 12) -
 
 def _generar_telefono_guatemala(rng: random.Random) -> str:
     digits = ''.join(rng.choice('0123456789') for _ in range(8))
-    return f"+502{digits}"
+    return f"+502 {digits}"
 
 
 def generar_usuarios_personalizados(cantidad: int, min_len: int = 3, max_len: int = 12, rng: random.Random | None = None) -> List[str]:
@@ -171,7 +171,10 @@ def generar_contrasenas_seguras(cantidad: int, length: int = 12, require_upper: 
     return resultados
 
 
-def _validar_generado(nombre: str, palabra: str) -> bool:
+def validar_generado(nombre: str, palabra: str) -> bool:
+    """Validación pública para usos desde UI y motor.
+    Mantiene la lógica previa de `_validar_generado`.
+    """
     if palabra is None:
         return False
     if nombre == 'usuario':
@@ -203,31 +206,31 @@ def generar_por_parametros(parametros: Dict[str, int], max_tokens_map: Dict[str,
             if nombre == 'contraseña':
                 vals = generar_contrasenas_seguras(1, length=max_t)
                 candidato = vals[0] if vals else None
-                if candidato and _validar_generado(nombre, candidato):
+                if candidato and validar_generado(nombre, candidato):
                     obtenidas.append(candidato)
                     success = True
             elif nombre == 'usuario':
                 vals = generar_usuarios_personalizados(1, min_len=3, max_len=max_t)
                 candidato = vals[0] if vals else None
-                if candidato and _validar_generado(nombre, candidato):
+                if candidato and validar_generado(nombre, candidato):
                     obtenidas.append(candidato)
                     success = True
             elif nombre == 'direccion':
                 vals = generar_varias('direccion', 1, max_tokens=max_t)
                 candidato = vals[0] if vals else None
-                if candidato and _validar_generado(nombre, candidato):
+                if candidato and validar_generado(nombre, candidato):
                     obtenidas.append(candidato)
                     success = True
             elif nombre == 'telefono':
                 vals = generar_varias('telefono', 1, max_tokens=max_t)
                 candidato = vals[0] if vals else None
-                if candidato and _validar_generado(nombre, candidato):
+                if candidato and validar_generado(nombre, candidato):
                     obtenidas.append(candidato)
                     success = True
             else:
                 for intento in range(attempts_per_item):
                     candidato = generar_palabra(GRAMATICAS_PREDEFINIDAS[nombre], max_tokens=max_t)
-                    if _validar_generado(nombre, candidato):
+                    if validar_generado(nombre, candidato):
                         obtenidas.append(candidato)
                         success = True
                         break
@@ -282,7 +285,6 @@ def generar_por_parametros(parametros: Dict[str, int], max_tokens_map: Dict[str,
                         elif nombre == 'usuario':
                             palabras_generadas_db.insertar_usuario(v)
                     except Exception:
-                        # ignore individual insert errors
                         continue
 
     return resultados

@@ -8,18 +8,6 @@ import palabras_generadas_db
 import motor_generacion
 
 class InterfazGramaticas(tk.Tk):
-    def validar_entrada(self, nombre, palabra):
-        if nombre == "usuario":
-            return bool(re.fullmatch(r"[A-Za-zÁÉÍÓÚáéíóúÑñ ]{2,}", palabra))
-        elif nombre == "correo":
-            return bool(re.fullmatch(r"[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}", palabra))
-        elif nombre == "direccion":
-            return bool(re.fullmatch(r"[A-Za-zÁÉÍÓÚáéíóúÑñ0-9 .,#-]{5,}", palabra))
-        elif nombre == "contraseña":
-            return bool(re.fullmatch(r"(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%]{6,}", palabra))
-        elif nombre == "telefono":
-            return bool(re.fullmatch(r"[\d\-+() ]{8,}", palabra))
-        return True
     def __init__(self):
         super().__init__()
         self.title("Gestor de Gramáticas - Proyecto Autómatas")
@@ -120,12 +108,6 @@ class InterfazGramaticas(tk.Tk):
             messagebox.showinfo("Generación", "Cantidad no válida o cancelada.")
             return
 
-        try:
-            self.btn_multi.config(state=tk.DISABLED)
-            self.btn_ver.config(state=tk.DISABLED)
-        except Exception:
-            pass
-
         extra = {}
         if nombre == 'usuario':
             min_len = simpledialog.askinteger("Usuarios", "Longitud mínima de usuario:", minvalue=1, initialvalue=3)
@@ -144,11 +126,7 @@ class InterfazGramaticas(tk.Tk):
                 return
             extra['length'] = length
 
-        try:
-            self.btn_multi.config(state=tk.DISABLED)
-            self.btn_ver.config(state=tk.DISABLED)
-        except Exception:
-            pass
+        # Buttons will be disabled in the worker scheduling and re-enabled after completion
 
         def worker(extra):
             try:

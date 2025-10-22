@@ -50,7 +50,6 @@ def crear_tablas():
 
 
 def insertar_contrasena(contrasena: str):
-    crear_tablas()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('INSERT INTO contrasenas (contrasena) VALUES (?)', (contrasena,))
@@ -58,7 +57,6 @@ def insertar_contrasena(contrasena: str):
     conn.close()
 
 def insertar_correo(correo: str):
-    crear_tablas()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('INSERT INTO correos (correo) VALUES (?)', (correo,))
@@ -66,7 +64,6 @@ def insertar_correo(correo: str):
     conn.close()
 
 def insertar_direccion(direccion: str):
-    crear_tablas()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('INSERT INTO direcciones (direccion) VALUES (?)', (direccion,))
@@ -74,7 +71,6 @@ def insertar_direccion(direccion: str):
     conn.close()
 
 def insertar_telefono(telefono: str):
-    crear_tablas()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('INSERT INTO telefonos (telefono) VALUES (?)', (telefono,))
@@ -82,7 +78,6 @@ def insertar_telefono(telefono: str):
     conn.close()
 
 def insertar_usuario(usuario: str):
-    crear_tablas()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute('INSERT INTO usuarios (usuario) VALUES (?)', (usuario,))
@@ -93,7 +88,6 @@ def insertar_usuario(usuario: str):
 def insertar_contrasenas_batch(contrasenas: list):
     if not contrasenas:
         return
-    crear_tablas()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.executemany('INSERT INTO contrasenas (contrasena) VALUES (?)', ((c,) for c in contrasenas))
@@ -104,7 +98,6 @@ def insertar_contrasenas_batch(contrasenas: list):
 def insertar_correos_batch(correos: list):
     if not correos:
         return
-    crear_tablas()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.executemany('INSERT INTO correos (correo) VALUES (?)', ((c,) for c in correos))
@@ -115,7 +108,6 @@ def insertar_correos_batch(correos: list):
 def insertar_direcciones_batch(direcciones: list):
     if not direcciones:
         return
-    crear_tablas()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.executemany('INSERT INTO direcciones (direccion) VALUES (?)', ((d,) for d in direcciones))
@@ -126,7 +118,6 @@ def insertar_direcciones_batch(direcciones: list):
 def insertar_telefonos_batch(telefonos: list):
     if not telefonos:
         return
-    crear_tablas()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.executemany('INSERT INTO telefonos (telefono) VALUES (?)', ((t,) for t in telefonos))
@@ -137,7 +128,6 @@ def insertar_telefonos_batch(telefonos: list):
 def insertar_usuarios_batch(usuarios: list):
     if not usuarios:
         return
-    crear_tablas()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.executemany('INSERT INTO usuarios (usuario) VALUES (?)', ((u,) for u in usuarios))
