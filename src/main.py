@@ -15,9 +15,9 @@ except ImportError as e:
         sys.exit(1)
 
 
-PRIMARY_COLOR = "#5A9BD8"      # Azul suave
-SECONDARY_COLOR = "#E8EEF5"    # Fondo gris azulado claro
-BUTTON_COLOR = "#4285F4"       # Azul más intenso
+PRIMARY_COLOR = "#5A9BD8"      
+SECONDARY_COLOR = "#E8EEF5"    
+BUTTON_COLOR = "#4285F4"       
 BUTTON_HOVER = "#3073D1"
 TEXT_COLOR = "#1E1E1E"
 HIGHLIGHT_COLOR = "#A2C5F2"
