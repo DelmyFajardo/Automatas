@@ -16,9 +16,7 @@ def _es_terminal(simbolo: str, gramatica: Dict[str, Any]) -> bool:
 
 
 def generar_palabra(gramatica: Dict[str, Any], max_tokens: int = 12, rng: random.Random | None = None) -> str:
-    """
-    Genera una palabra a partir de la gramática usando expansión recursiva.
-    """
+    
     if rng is None:
         rng = random
 
@@ -241,24 +239,51 @@ def generar_por_parametros(parametros: Dict[str, int], max_tokens_map: Dict[str,
             resultados[f"{nombre}_failed"] = failures
 
         if save and obtenidas:
-            if nombre == 'contraseña':
+            try:
+                if nombre == 'contraseña' and hasattr(palabras_generadas_db, 'insertar_contrasenas_batch'):
+                    palabras_generadas_db.insertar_contrasenas_batch(obtenidas)
+                elif nombre == 'correo' and hasattr(palabras_generadas_db, 'insertar_correos_batch'):
+                    palabras_generadas_db.insertar_correos_batch(obtenidas)
+                elif nombre == 'direccion' and hasattr(palabras_generadas_db, 'insertar_direcciones_batch'):
+                    palabras_generadas_db.insertar_direcciones_batch(obtenidas)
+                elif nombre == 'telefono' and hasattr(palabras_generadas_db, 'insertar_telefonos_batch'):
+                    palabras_generadas_db.insertar_telefonos_batch(obtenidas)
+                elif nombre == 'usuario' and hasattr(palabras_generadas_db, 'insertar_usuarios_batch'):
+                    palabras_generadas_db.insertar_usuarios_batch(obtenidas)
+                else:
+                    if nombre == 'contraseña':
+                        for v in obtenidas:
+                            palabras_generadas_db.insertar_contrasena(v)
+                    elif nombre == 'correo':
+                        for v in obtenidas:
+                            palabras_generadas_db.insertar_correo(v)
+                    elif nombre == 'direccion':
+                        for v in obtenidas:
+                            palabras_generadas_db.insertar_direccion(v)
+                    elif nombre == 'telefono':
+                        for v in obtenidas:
+                            palabras_generadas_db.insertar_telefono(v)
+                    elif nombre == 'usuario':
+                        for v in obtenidas:
+                            palabras_generadas_db.insertar_usuario(v)
+                    else:
+                        pass
+            except Exception:
                 for v in obtenidas:
-                    palabras_generadas_db.insertar_contrasena(v)
-            elif nombre == 'correo':
-                for v in obtenidas:
-                    palabras_generadas_db.insertar_correo(v)
-            elif nombre == 'direccion':
-                for v in obtenidas:
-                    palabras_generadas_db.insertar_direccion(v)
-            elif nombre == 'telefono':
-                for v in obtenidas:
-                    palabras_generadas_db.insertar_telefono(v)
-            elif nombre == 'usuario':
-                for v in obtenidas:
-                    palabras_generadas_db.insertar_usuario(v)
-            else:
-                for v in obtenidas:
-                    palabras_generadas_db.insertar_generico(nombre, v)
+                    try:
+                        if nombre == 'contraseña':
+                            palabras_generadas_db.insertar_contrasena(v)
+                        elif nombre == 'correo':
+                            palabras_generadas_db.insertar_correo(v)
+                        elif nombre == 'direccion':
+                            palabras_generadas_db.insertar_direccion(v)
+                        elif nombre == 'telefono':
+                            palabras_generadas_db.insertar_telefono(v)
+                        elif nombre == 'usuario':
+                            palabras_generadas_db.insertar_usuario(v)
+                    except Exception:
+                        # ignore individual insert errors
+                        continue
 
     return resultados
 

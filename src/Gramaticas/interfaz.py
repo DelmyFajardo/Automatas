@@ -1,5 +1,6 @@
 
 import re
+import threading
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 from manejo_gramaticas import GRAMATICAS_PREDEFINIDAS, seleccionar_gramatica
@@ -48,12 +49,11 @@ class InterfazGramaticas(tk.Tk):
         frame_botones = tk.Frame(self, bg="#d7ccc8")
         frame_botones.pack(pady=(0, 10))
 
+        self.btn_ver = tk.Button(frame_botones, text="Ver palabras almacenadas", command=self.ver_palabras, width=22, font=("Segoe UI", 11, "bold"), bg="#c8e6c9", fg="#263238", activebackground="#b3e5fc", activeforeground="#263238", relief="raised", bd=2)
+        self.btn_ver.grid(row=0, column=1, padx=10, pady=8)
 
-        btn_ver = tk.Button(frame_botones, text="Ver palabras almacenadas", command=self.ver_palabras, width=22, font=("Segoe UI", 11, "bold"), bg="#c8e6c9", fg="#263238", activebackground="#b3e5fc", activeforeground="#263238", relief="raised", bd=2)
-        btn_ver.grid(row=0, column=1, padx=10, pady=8)
-
-        btn_multi = tk.Button(frame_botones, text="Generar múltiples", command=self.generar_multiples, width=22, font=("Segoe UI", 10, "bold"), bg="#8fc3d9", fg="#263238", activebackground="#b3e5fc", activeforeground="#263238", relief="raised", bd=2)
-        btn_multi.grid(row=1, column=0, columnspan=2, pady=(6, 0))
+        self.btn_multi = tk.Button(frame_botones, text="Generar múltiples", command=self.generar_multiples, width=22, font=("Segoe UI", 10, "bold"), bg="#8fc3d9", fg="#263238", activebackground="#b3e5fc", activeforeground="#263238", relief="raised", bd=2)
+        self.btn_multi.grid(row=1, column=0, columnspan=2, pady=(6, 0))
 
         btn_salir = tk.Button(self, text="Salir", command=self.destroy, width=12, font=("Segoe UI", 11, "bold"), bg="#4e342e", fg="white", activebackground="#a1887f", activeforeground="white", relief="raised", bd=2)
         btn_salir.pack(pady=(8, 0))
@@ -71,15 +71,15 @@ class InterfazGramaticas(tk.Tk):
         nombre = self.lista_gramaticas.get(seleccion)
         if nombre in GRAMATICAS_PREDEFINIDAS:
             if nombre == "contraseña":
-                palabras = palabras_generadas_db.obtener_contrasenas()
+                palabras = palabras_generadas_db.obtener_generico('contrasenas', limit=100)
             elif nombre == "correo":
-                palabras = palabras_generadas_db.obtener_correos()
+                palabras = palabras_generadas_db.obtener_generico('correos', limit=100)
             elif nombre == "direccion":
-                palabras = palabras_generadas_db.obtener_direcciones()
+                palabras = palabras_generadas_db.obtener_generico('direcciones', limit=100)
             elif nombre == "telefono":
-                palabras = palabras_generadas_db.obtener_telefonos()
+                palabras = palabras_generadas_db.obtener_generico('telefonos', limit=100)
             elif nombre == "usuario":
-                palabras = palabras_generadas_db.obtener_usuarios()
+                palabras = palabras_generadas_db.obtener_generico('usuarios', limit=100)
             else:
                 palabras = []
         else:
@@ -110,6 +110,7 @@ class InterfazGramaticas(tk.Tk):
             messagebox.showinfo("Info", "Seleccione una gramática antes de generar.")
             return
         nombre = self.lista_gramaticas.get(seleccion)
+
         try:
             cantidad = simpledialog.askinteger("Generar múltiples", f"¿Cuántas '{nombre}' generar?", minvalue=1, initialvalue=1)
         except Exception:
@@ -118,60 +119,109 @@ class InterfazGramaticas(tk.Tk):
         if not cantidad or cantidad <= 0:
             messagebox.showinfo("Generación", "Cantidad no válida o cancelada.")
             return
-        max_tokens_map = {
-            'contraseña': 20,
-            'correo': 25,
-            'direccion': 30,
-            'telefono': 15,
-            'usuario': 18
-        }
 
         try:
-            if nombre == 'usuario':
-                min_len = simpledialog.askinteger("Usuarios", "Longitud mínima de usuario:", minvalue=1, initialvalue=3)
-                max_len = simpledialog.askinteger("Usuarios", "Longitud máxima de usuario:", minvalue=1, initialvalue=12)
-                if min_len is None or max_len is None or min_len > max_len:
-                    messagebox.showerror("Error", "Longitudes inválidas")
-                    return
-                generadas = motor_generacion.generar_usuarios_personalizados(cantidad, min_len=min_len, max_len=max_len)
-            else:
-                generadas = motor_generacion.generar_varias(nombre, cantidad, max_tokens=max_tokens_map.get(nombre, 20))
-        except Exception as e:
-            messagebox.showerror("Error", f"Error al generar: {e}")
-            return
+            self.btn_multi.config(state=tk.DISABLED)
+            self.btn_ver.config(state=tk.DISABLED)
+        except Exception:
+            pass
 
-        count = 0
-        if nombre == 'contraseña':
+        extra = {}
+        if nombre == 'usuario':
+            min_len = simpledialog.askinteger("Usuarios", "Longitud mínima de usuario:", minvalue=1, initialvalue=3)
+            if min_len is None:
+                return
+            max_len = simpledialog.askinteger("Usuarios", "Longitud máxima de usuario:", minvalue=1, initialvalue=12)
+            if max_len is None or min_len > max_len:
+                messagebox.showerror("Error", "Longitudes inválidas")
+                return
+            extra['min_len'] = min_len
+            extra['max_len'] = max_len
+        elif nombre == 'contraseña':
             length = simpledialog.askinteger("Contraseñas", "Longitud de las contraseñas:", minvalue=6, initialvalue=12)
             if length is None or length < 1:
                 messagebox.showerror("Error", "Longitud inválida")
                 return
-            generadas = motor_generacion.generar_contrasenas_seguras(cantidad, length=length)
-            for g in generadas:
-                palabras_generadas_db.insertar_contrasena(g)
-                count += 1
-        elif nombre == 'correo':
-            for g in generadas:
-                palabras_generadas_db.insertar_correo(g)
-                count += 1
-        elif nombre == 'direccion':
-            for g in generadas:
-                palabras_generadas_db.insertar_direccion(g)
-                count += 1
-        elif nombre == 'telefono':
-            for g in generadas:
-                palabras_generadas_db.insertar_telefono(g)
-                count += 1
-        elif nombre == 'usuario':
-            for g in generadas:
-                palabras_generadas_db.insertar_usuario(g)
-                count += 1
-        else:
-            for g in generadas:
-                palabras_generadas_db.insertar_generico(nombre, g)
-                count += 1
+            extra['length'] = length
 
-        messagebox.showinfo("Generación completada", f"Se generaron y almacenaron {count} elementos para '{nombre}'.")
+        try:
+            self.btn_multi.config(state=tk.DISABLED)
+            self.btn_ver.config(state=tk.DISABLED)
+        except Exception:
+            pass
+
+        def worker(extra):
+            try:
+                count = 0
+                if nombre == 'usuario':
+                    generadas = motor_generacion.generar_usuarios_personalizados(cantidad, min_len=extra.get('min_len'), max_len=extra.get('max_len'))
+                elif nombre == 'contraseña':
+                    generadas = motor_generacion.generar_contrasenas_seguras(cantidad, length=extra.get('length'))
+                else:
+                    max_tokens_map = {
+                        'correo': 25,
+                        'direccion': 30,
+                        'telefono': 15
+                    }
+                    generadas = motor_generacion.generar_varias(nombre, cantidad, max_tokens=max_tokens_map.get(nombre, 20))
+
+                try:
+                    if nombre == 'contraseña' and hasattr(palabras_generadas_db, 'insertar_contrasenas_batch'):
+                        palabras_generadas_db.insertar_contrasenas_batch(generadas)
+                        count = len(generadas)
+                    elif nombre == 'correo' and hasattr(palabras_generadas_db, 'insertar_correos_batch'):
+                        palabras_generadas_db.insertar_correos_batch(generadas)
+                        count = len(generadas)
+                    elif nombre == 'direccion' and hasattr(palabras_generadas_db, 'insertar_direcciones_batch'):
+                        palabras_generadas_db.insertar_direcciones_batch(generadas)
+                        count = len(generadas)
+                    elif nombre == 'telefono' and hasattr(palabras_generadas_db, 'insertar_telefonos_batch'):
+                        palabras_generadas_db.insertar_telefonos_batch(generadas)
+                        count = len(generadas)
+                    elif nombre == 'usuario' and hasattr(palabras_generadas_db, 'insertar_usuarios_batch'):
+                        palabras_generadas_db.insertar_usuarios_batch(generadas)
+                        count = len(generadas)
+                    else:
+                        for g in generadas:
+                            if nombre == 'contraseña':
+                                palabras_generadas_db.insertar_contrasena(g)
+                            elif nombre == 'correo':
+                                palabras_generadas_db.insertar_correo(g)
+                            elif nombre == 'direccion':
+                                palabras_generadas_db.insertar_direccion(g)
+                            elif nombre == 'telefono':
+                                palabras_generadas_db.insertar_telefono(g)
+                            elif nombre == 'usuario':
+                                palabras_generadas_db.insertar_usuario(g)
+                            count += 1
+                except Exception as e:
+                    for g in generadas:
+                        try:
+                            if nombre == 'contraseña':
+                                palabras_generadas_db.insertar_contrasena(g)
+                            elif nombre == 'correo':
+                                palabras_generadas_db.insertar_correo(g)
+                            elif nombre == 'direccion':
+                                palabras_generadas_db.insertar_direccion(g)
+                            elif nombre == 'telefono':
+                                palabras_generadas_db.insertar_telefono(g)
+                            elif nombre == 'usuario':
+                                palabras_generadas_db.insertar_usuario(g)
+                            count += 1
+                        except Exception:
+                            continue
+
+                self.after(0, lambda: messagebox.showinfo("Generación completada", f"Se generaron y almacenaron {count} elementos para '{nombre}'."))
+            except Exception as e:
+                self.after(0, lambda exc=e: messagebox.showerror("Error", f"Error durante la generación: {exc}"))
+            finally:
+                try:
+                    self.after(0, lambda: self.btn_multi.config(state=tk.NORMAL))
+                    self.after(0, lambda: self.btn_ver.config(state=tk.NORMAL))
+                except Exception:
+                    pass
+
+        threading.Thread(target=worker, args=(extra,), daemon=True).start()
 
 if __name__ == "__main__":
     palabras_generadas_db.crear_tablas()

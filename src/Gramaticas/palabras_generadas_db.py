@@ -90,42 +90,97 @@ def insertar_usuario(usuario: str):
     conn.close()
 
 
-def obtener_contrasenas():
+def insertar_contrasenas_batch(contrasenas: list):
+    if not contrasenas:
+        return
+    crear_tablas()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute('SELECT contrasena FROM contrasenas')
-    resultados = cursor.fetchall()
+    cursor.executemany('INSERT INTO contrasenas (contrasena) VALUES (?)', ((c,) for c in contrasenas))
+    conn.commit()
     conn.close()
-    return [fila[0] for fila in resultados]
+
+
+def insertar_correos_batch(correos: list):
+    if not correos:
+        return
+    crear_tablas()
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.executemany('INSERT INTO correos (correo) VALUES (?)', ((c,) for c in correos))
+    conn.commit()
+    conn.close()
+
+
+def insertar_direcciones_batch(direcciones: list):
+    if not direcciones:
+        return
+    crear_tablas()
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.executemany('INSERT INTO direcciones (direccion) VALUES (?)', ((d,) for d in direcciones))
+    conn.commit()
+    conn.close()
+
+
+def insertar_telefonos_batch(telefonos: list):
+    if not telefonos:
+        return
+    crear_tablas()
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.executemany('INSERT INTO telefonos (telefono) VALUES (?)', ((t,) for t in telefonos))
+    conn.commit()
+    conn.close()
+
+
+def insertar_usuarios_batch(usuarios: list):
+    if not usuarios:
+        return
+    crear_tablas()
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.executemany('INSERT INTO usuarios (usuario) VALUES (?)', ((u,) for u in usuarios))
+    conn.commit()
+    conn.close()
+
+
+def obtener_contrasenas():
+    return obtener_generico('contrasenas')
 
 def obtener_correos():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute('SELECT correo FROM correos')
-    resultados = cursor.fetchall()
-    conn.close()
-    return [fila[0] for fila in resultados]
+    return obtener_generico('correos')
 
 def obtener_direcciones():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute('SELECT direccion FROM direcciones')
-    resultados = cursor.fetchall()
-    conn.close()
-    return [fila[0] for fila in resultados]
+    return obtener_generico('direcciones')
 
 def obtener_telefonos():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute('SELECT telefono FROM telefonos')
-    resultados = cursor.fetchall()
-    conn.close()
-    return [fila[0] for fila in resultados]
+    return obtener_generico('telefonos')
 
 def obtener_usuarios():
+    return obtener_generico('usuarios')
+
+
+def obtener_generico(tabla: str, column: str | None = None, limit: int | None = None):
+   
+    if column is None:
+        mapping = {
+            'contrasenas': 'contrasena',
+            'correos': 'correo',
+            'direcciones': 'direccion',
+            'telefonos': 'telefono',
+            'usuarios': 'usuario'
+        }
+        column = mapping.get(tabla, None)
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute('SELECT usuario FROM usuarios')
-    resultados = cursor.fetchall()
-    conn.close()
-    return [fila[0] for fila in resultados]
+    if limit is None:
+        cursor.execute(f'SELECT {column} FROM {tabla} ORDER BY id ASC')
+        rows = cursor.fetchall()
+        conn.close()
+        return [r[0] for r in rows]
+    else:
+        cursor.execute(f'SELECT {column} FROM {tabla} ORDER BY id DESC LIMIT ?', (limit,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [r[0] for r in reversed(rows)]
