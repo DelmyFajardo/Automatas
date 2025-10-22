@@ -9,12 +9,12 @@ import os
 try:
     from Expresiones_Regulares.Expresion import ExpresionSearcher
     # Placeholder para la funcionalidad de Gramáticas (Tarea 07/10 y 08/10)
-    from Gramaticas.generator import GrammarGenerator, GRAMATICA_CONTRASENA , GRAMATICA_EMAIL, GRAMATICA_IPV4
+    from Gramaticas.generator import GrammarGenerator, GRAMATICA_CONTRASENA , GRAMATICA_EMAIL, GRAMATICA_IPV4, GRAMATICA_DIRECCION, GRAMATICA_TELEFONO, GRAMATICA_USUARIO
 except ImportError as e:
     # Intenta la importación de módulo si se ejecuta con 'py -m src.main'
     try:
         from src.Expresiones_Regulares.Expresion import ExpresionSearcher
-        from src.Gramaticas.generator import GrammarGenerator, GRAMATICA_CONTRASENA, GRAMATICA_EMAIL, GRAMATICA_IPV4
+        from src.Gramaticas.generator import GrammarGenerator, GRAMATICA_CONTRASENA, GRAMATICA_EMAIL, GRAMATICA_IPV4, GRAMATICA_DIRECCION, GRAMATICA_TELEFONO, GRAMATICA_USUARIO
     except ImportError as e_alt:
         print(f"ERROR DE MODULARIDAD: No se puede encontrar los módulos internos. {e_alt}")
         sys.exit(1)
@@ -189,6 +189,9 @@ class GrammarGenerationFrame(ttk.Frame):
             "Contraseña Básica": GRAMATICA_CONTRASENA,
             "Correo Electrónico": GRAMATICA_EMAIL, 
             "Dirección IP": GRAMATICA_IPV4,
+            "Dirección Física": GRAMATICA_DIRECCION,
+            "Número de Teléfono": GRAMATICA_TELEFONO,
+            "Nombre de Usuario": GRAMATICA_USUARIO
             # ... añadir las otras 2 gramáticas
         }
         
@@ -243,7 +246,7 @@ class GrammarGenerationFrame(ttk.Frame):
             self.output_text.insert(tk.END, "-------------------------------------\n")
             
             for i in range(num):
-                word = generator.generate(max_length=20) # Llama al módulo de generación
+                word = generator.generate(max_length=100) # Llama al módulo de generación
                 self.output_text.insert(tk.END, f"{i+1}. {word}\n")
                 
         except Exception as e:

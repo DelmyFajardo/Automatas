@@ -1,5 +1,5 @@
 from typing import Dict, Any, Optional
-from gramaticas_db import crear_tabla_gramaticas, insertar_gramatica, obtener_todas_gramaticas
+from .gramaticas_db import crear_tabla_gramaticas, insertar_gramatica, obtener_todas_gramaticas
 
 
 GRAMATICAS_PREDEFINIDAS: Dict[str, Dict[str, Any]] = {
@@ -89,3 +89,4 @@ try:
         pass
 except Exception:
     pass
+

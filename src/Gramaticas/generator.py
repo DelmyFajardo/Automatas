@@ -1,186 +1,182 @@
 import random
 from typing import Dict, List, Optional
 
-# Definición de las producciones de la Gramática 1 (Ejemplo simplificado)
+
+# ----------------------------------------------------------------------
+# DEFINICIONES DE GRAMÁTICAS (Incluyendo Correcciones para GT)
+# ----------------------------------------------------------------------
+
+# Gramática 1: Contraseña (CORREGIDA - SEGURA)
 GRAMATICA_CONTRASENA = {
-    "nombre": "ContrasenaBasica",
+    "nombre": "ContrasenaSegura",
     "simbolo_inicial": "<Password>",
     "producciones": {
-        "<Password>": ["<Parte1><Parte2>"], # Mínimo 8 caracteres
-        "<Parte1>": ["<Letra>", "<Numero>", "<Simbolo>"],
-        "<Parte2>": ["", "<Parte1><Parte2>"],
+        # 1. <Password> garantiza la inclusión de los 3 tipos de caracteres obligatorios 
+        #    en orden aleatorio inicial, seguido por el cuerpo.
+        "<Password>": [
+            "<Letra><Numero><Simbolo><Cuerpo>",
+            "<Numero><Simbolo><Letra><Cuerpo>",
+            "<Simbolo><Letra><Numero><Cuerpo>",
+            "<Letra><Simbolo><Numero><Cuerpo>",
+            "<Numero><Letra><Simbolo><Cuerpo>",
+            "<Simbolo><Numero><Letra><Cuerpo>"
+        ], 
         
-        # Terminales con rangos
+        # 2. <Cuerpo> genera el resto de la contraseña de forma recursiva (puede ser vacío).
+        "<Cuerpo>": [
+            "",                             # Producción vacía para terminar la recursión
+            "<Componente><Cuerpo>"          # Agrega un carácter y continúa
+        ],
+        
+        # 3. <Componente> es cualquier carácter permitido.
+        "<Componente>": [
+            "<Letra>", 
+            "<Numero>", 
+            "<Simbolo>"
+        ],
+
+        # 4. Terminales
         "<Letra>": [chr(i) for i in range(ord('a'), ord('z') + 1)] + \
                    [chr(i) for i in range(ord('A'), ord('Z') + 1)],
         "<Numero>": [str(i) for i in range(10)],
-        "<Simbolo>": ["!", "@", "#", "$", "%"]
+        # Más símbolos para mayor seguridad
+        "<Simbolo>": ["!", "@", "#", "$", "%", "&", "*", "-", "+", "="]
     }
 }
 
-
+# Gramática 2: Correo Electrónico
 GRAMATICA_EMAIL = {
     "nombre": "CorreoElectronicoBasico",
     "simbolo_inicial": "<Email>",
     "producciones": {
-        "<Email>": [
-            "<LocalPart>@<DomainPart>.<TLD>"
-        ],
-        
-        # --- Parte Local (Nombre de usuario) ---
-        # Permite letras/numeros, punto (.), y guion bajo (_)
-        "<LocalPart>": [
-            "<LocalChar>", 
-            "<LocalPart><LocalChar>",
-            "<LocalPart><LocalSep>" # Permite separadores internos
-        ],
-        
-        # Símbolos terminales permitidos en la Parte Local (ej: usuario.nombre_123)
-        "<LocalChar>": [
-            * [chr(i) for i in range(ord('a'), ord('z') + 1)], # Letras minúsculas
-            * [str(i) for i in range(10)],                     # Números
-        ],
-        "<LocalSep>": [
-            ".", "_"
-        ],
-
-        # --- Parte Dominio ---
-        # El dominio puede ser multinivel (ej: sub.dominio.com)
-        "<DomainPart>": [
-            "<DomainSub>",
-            "<DomainSub>.<DomainPart>" # Recursividad para subdominios
-        ],
-        "<DomainSub>": [
-            "<DomainChar>", 
-            "<DomainSub><DomainChar>" # Mínimo un caracter
-        ],
-        
-        # Símbolos terminales permitidos en la Parte Dominio (solo letras y números)
-        "<DomainChar>": [
-            * [chr(i) for i in range(ord('a'), ord('z') + 1)],
-            * [str(i) for i in range(10)],
-        ],
-        
-        # --- TLD (Top-Level Domain) ---
-        "<TLD>": [
-            "com", "net", "org", "co", "io", "gob"
-        ]
+        # La forma correcta de escribir NTs en la producción es la clave:
+        "<Email>": ["<LocalPart>@<DomainPart>.<TLD>"],
+        "<LocalPart>": ["<LocalChar>", "<LocalPart><LocalChar>", "<LocalPart><LocalSep>"],
+        "<LocalChar>": [*[chr(i) for i in range(ord('a'), ord('z') + 1)], *[str(i) for i in range(10)]],
+        "<LocalSep>": [".", "_"],
+        "<DomainPart>": ["<DomainSub>", "<DomainSub>.<DomainPart>"],
+        "<DomainSub>": ["<DomainChar>", "<DomainSub><DomainChar>"],
+        "<DomainChar>": [*[chr(i) for i in range(ord('a'), ord('z') + 1)], *[str(i) for i in range(10)]],
+        "<TLD>": ["com", "net", "org", "co", "io", "gob"]
     }
 }
 
+# Gramática 3: Dirección IPv4
 GRAMATICA_IPV4 = {
     "nombre": "DireccionIPv4",
     "simbolo_inicial": "<IPv4>",
     "producciones": {
-        "<IPv4>": [
-            "<Octeto>.<Octeto>.<Octeto>.<Octeto>"
-        ],
-        
-        # --- Octeto (Representa un número entre 0 y 255) ---
-        # Dividido en reglas para aproximar el rango 0-255.
-        "<Octeto>": [
-            # 1. Números de 1 o 2 dígitos (0-99)
-            "<Cifra>", 
-            "<Cifra><Cifra>", 
-            
-            # 2. Números de 100 a 199
-            "1<Cifra><Cifra>", 
-            
-            # 3. Números de 200 a 249
-            "2<Cifra20_49>", 
-            
-            # 4. Números de 250 a 255
-            "25<Cifra0_5>" 
-        ],
-        
-        # Terminales: Cifras
-        "<Cifra>": [str(i) for i in range(10)],             # 0 a 9
-        "<Cifra20_49>": [str(i) for i in range(10)],        # 0 a 9 (para 200-209, 210-219, etc.)
-        "<Cifra0_5>": [str(i) for i in range(6)],           # 0 a 5
-        
-        # Nota: La regla de 200 a 249 se simplifica como 2XX. La lógica real 
-        # (200-249) es más compleja y se controla mejor con la longitud máxima.
-        # Si quieres más precisión:
-        # "2<Cifra0_4><Cifra>",  # 200-249
-        # "<Cifra0_4>": [str(i) for i in range(5)], # 0 a 4
+        "<IPv4>": ["<Octeto>.<Octeto>.<Octeto>.<Octeto>"],
+        "<Octeto>": ["<Cifra>", "<Cifra><Cifra>", "1<Cifra><Cifra>", "2<Cifra20_49>", "25<Cifra0_5>"],
+        "<Cifra>": [str(i) for i in range(10)], 
+        "<Cifra20_49>": [str(i) for i in range(10)], 
+        "<Cifra0_5>": [str(i) for i in range(6)], 
     }
 }
 
+# Gramática 4: Dirección Postal (CORREGIDA para formato GT)
+# Gramática 4: Dirección Postal (CORREGIDA, Anti-Recursividad)
+GRAMATICA_DIRECCION = {
+    "nombre": "DireccionPostalGT",
+    "simbolo_inicial": "<S>",
+    "producciones": {
+        # Formato: 'Tipo de Vía # - #, Zona Z, Ciudad, Depto'
+        "<S>": [
+            "<Tipo> <NumeroVia>-<NumeroCasa>, Zona <Zona>, <Ciudad>, <Depto>"
+        ],
+        "<Tipo>": [
+            "Avenida", "Calle", "Boulevard", "6a Avenida", "7a Calle", "3a Avenida"
+        ],
+        
+        # Eliminamos la recursividad en el número de vía. 
+        # Ahora solo genera un número de 1 a 2 dígitos.
+        "<NumeroVia>": [
+            "<D>",      # Ej: '1'
+            "<D><D>"    # Ej: '12'
+        ],
+        
+        # Número de Casa/Guion (ej: 01, 80). Eliminamos la recursividad.
+        "<NumeroCasa>": [
+            "<D><D>",
+            "<D>"
+        ],
+        
+        # Dígitos
+        "<D>": [str(i) for i in range(10)],
+        
+        # Zona (simula 1-25)
+        "<Zona>": [
+            "0<Cifra1_9>",
+            "1<Cifra0_9>",
+            "2<Cifra0_5>"
+        ],
+        "<Cifra0_9>": [str(i) for i in range(10)],
+        "<Cifra1_9>": [str(i) for i in range(1, 10)],
+        "<Cifra0_5>": [str(i) for i in range(6)],
+        
+        "<Ciudad>": [
+            "Ciudad de Guatemala", "Mixco", "Villa Nueva", "Quetzaltenango", "Antigua Guatemala", 
+            "Escuintla", "Cobán", "Chimaltenango", "Huehuetenango", "San Marcos", "Jalapa", "Peten"
+        ],
+        "<Depto>": [
+            "Guatemala", "Quetzaltenango", "Sacatepequez", "Escuintla", 
+            "Alta Verapaz", "Chimaltenango", "Huehuetenango", "San Marcos", "Jalapa", "Petén"
+        ]
+    }
+}
+
+# Gramática 5: Teléfono (CORREGIDA para formato GT)
+GRAMATICA_TELEFONO = {
+    "nombre": "NumeroTelefonoGT",
+    "simbolo_inicial": "<S>",
+    "producciones": {
+        # Formato: XXXX-XXXX (8 dígitos, común en GT)
+        # Nota: Usamos <D> en lugar de <Digito> por simplicidad y consistencia
+        "<S>": ["<D><D><D><D>-<D><D><D><D>"],
+        "<D>": [str(i) for i in range(10)], # 0-9
+    }
+}
+
+# Gramática 6: Usuario (Generación de Nombres)
+GRAMATICA_USUARIO = {
+    "nombre": "NombreCompleto",
+    "simbolo_inicial": "<S>",
+    "producciones": {
+        "<S>": ["<Nombre> <Apellido>"],
+        "<Nombre>": ["Karla", "Juan", "María", "Carlos", "Ana", "Luis", "Marta", "José", "Miguel", "Laura"],
+        "<Apellido>": ["Pérez", "López", "González", "Hernández", "Martínez", "Ramírez", "Ruiz", "Sánchez"]
+    }
+}
 
 
 class GrammarGenerator:
     def __init__(self, grammar_data: Dict):
         self.productions = grammar_data["producciones"]
         self.start_symbol = grammar_data["simbolo_inicial"]
-        self.terminales = self._identify_terminals()
+        self.non_terminals = set(self.productions.keys())
+        # Nota: _identify_terminals es redundante si solo usamos el mapeo de producciones
 
-    def _identify_terminals(self) -> List[str]:
-        """Identifica los símbolos que no son no-terminales."""
-        non_terminals = set(self.productions.keys())
-        terminals = set()
-        for rules in self.productions.values():
-            for rule in rules:
-                for symbol in self._get_symbols_from_rule(rule):
-                    if symbol not in non_terminals and symbol != "":
-                        terminals.add(symbol)
-        return list(terminals)
+    # NO es necesario cambiar _identify_terminals ni _get_symbols_from_rule
     
-    def _get_symbols_from_rule(self, rule: str) -> List[str]:
-        """Divide una regla de producción en sus símbolos constituyentes."""
-        # Esto requiere una implementación más sofisticada para reconocer símbolos 
-        # rodeados por < >. Por ahora, asumiremos que los símbolos no-terminales 
-        # están separados o al inicio/final.
-        
-        # Implementación simple: si contiene '<', es no-terminal, si no, es terminal.
-        symbols = []
-        current_symbol = ""
-        in_nt = False
-        for char in rule:
-            if char == '<':
-                if current_symbol:
-                    symbols.append(current_symbol)
-                current_symbol = '<'
-                in_nt = True
-            elif char == '>':
-                current_symbol += '>'
-                symbols.append(current_symbol)
-                current_symbol = ""
-                in_nt = False
-            elif in_nt:
-                current_symbol += char
-            else:
-                # Si no estamos dentro de un NT, el carácter es un terminal
-                symbols.append(char)
-        
-        if current_symbol and not in_nt: # Si quedó un terminal al final
-             symbols.append(current_symbol)
-             
-        # NOTA TÉCNICA: La derivación recursiva es más fácil si cada regla es una
-        # lista de sus símbolos (ej. ["<Letra>", "<Numero>"]).
-
-        # Para esta implementación, usaremos una simple lista de caracteres para 
-        # terminales y la cadena completa para no-terminales.
-        
-        # Una alternativa más fácil es reemplazar solo el primer NT encontrado 
-        # en la cadena a derivar.
-        return [rule] # Devolvemos la regla completa para un manejo más simple.
-
-    def generate(self, max_length: int = 15) -> str:
-        """Realiza una derivación aleatoria para generar una palabra."""
+    def generate(self, max_length: int = 50) -> str:
+        """
+        Realiza una derivación aleatoria para generar una palabra.
+        Asegura que todos los NTs se expandan.
+        """
         work_string = self.start_symbol
         steps = 0
         
+        # Continuar mientras haya símbolos No Terminales (<...>) y no excedamos los pasos
         while any(nt in work_string for nt in self.productions) and steps < 1000:
             steps += 1
             
-            # Buscar el primer No Terminal (NT)
+            # --- Lógica de Búsqueda y Reemplazo del PRIMER NT ---
+            
             nt_start = work_string.find('<')
-            if nt_start == -1:
-                break # Solo quedan terminales
+            if nt_start == -1: break 
             
             nt_end = work_string.find('>', nt_start)
-            if nt_end == -1:
-                break # Error de gramática
+            if nt_end == -1: break 
                 
             nt_symbol = work_string[nt_start : nt_end + 1]
 
@@ -191,24 +187,48 @@ class GrammarGenerator:
                 # 2. Reemplaza el NT por la regla seleccionada
                 work_string = work_string[:nt_start] + selected_rule + work_string[nt_end + 1:]
                 
-                # Control de longitud (para evitar bucles infinitos en gramáticas recursivas)
-                if len(work_string) > max_length * 2:
-                    print("Advertencia: Palabra excedió el límite de longitud. Deteniendo.")
-                    break
+                # Control de longitud (usando solo terminales)
+                if len(work_string.replace('<','').replace('>','')) > max_length:
+                    return f"ERROR: Límite de longitud ({max_length}) excedido o recursión excesiva."
             else:
-                print(f"Error: Símbolo No Terminal desconocido '{nt_symbol}'")
-                break
+                # Esto captura un NT que está en la cadena pero no en la producción (un error de gramática)
+                return f"ERROR: Símbolo No Terminal no definido: {nt_symbol}"
                 
-        return work_string.replace("<", "").replace(">", "") # Limpia los símbolos NT
+        # Limpia cualquier NT remanente (aunque no debería haber si el bucle terminó bien)
+        return work_string.replace("<", "").replace(">", "")
 
+
+# ----------------------------------------------------------------------
+# PRUEBA DE GENERACIÓN (Bloque principal de ejecución)
+# ----------------------------------------------------------------------
 if __name__ == '__main__':
-    # Tarea 07/10: Primera gramática (Contraseña)
-    generator1 = GrammarGenerator(GRAMATICA_CONTRASENA)
-    print("--- Generación de Contraseñas ---")
-    for _ in range(5):
-        print(f"Generada: {generator1.generate(max_length=10)}")
-
-    # Tarea 08/10: Implementar 2 gramáticas más aquí.
     
-    # Gramática 2: Nombres de Usuario (Ejemplo simplificado)
-  
+    print("--- 1. Generación de Contraseñas ---")
+    generator1 = GrammarGenerator(GRAMATICA_CONTRASENA)
+    for _ in range(3):
+        print(f"Generada: {generator1.generate(max_length=12)}")
+        
+    print("\n--- 2. Generación de Correos Electrónicos ---")
+    generator2 = GrammarGenerator(GRAMATICA_EMAIL)
+    for _ in range(3):
+        print(f"Generada: {generator2.generate(max_length=30)}")
+        
+    print("\n--- 3. Generación de Direcciones IPv4 ---")
+    generator3 = GrammarGenerator(GRAMATICA_IPV4)
+    for _ in range(3):
+        print(f"Generada: {generator3.generate(max_length=15)}")
+
+    print("\n--- 4. Generación de Direcciones Postales (CORREGIDA) ---")
+    generator4 = GrammarGenerator(GRAMATICA_DIRECCION)
+    for _ in range(3):
+        print(f"Generada: {generator4.generate(max_length=80)}")
+
+    print("\n--- 5. Generación de Teléfonos GT (CORREGIDA) ---")
+    generator5 = GrammarGenerator(GRAMATICA_TELEFONO)
+    for _ in range(3):
+        print(f"Generada: {generator5.generate(max_length=9)}")
+        
+    print("\n--- 6. Generación de Nombres de Usuario/Personas ---")
+    generator6 = GrammarGenerator(GRAMATICA_USUARIO)
+    for _ in range(3):
+        print(f"Generada: {generator6.generate(max_length=20)}")
