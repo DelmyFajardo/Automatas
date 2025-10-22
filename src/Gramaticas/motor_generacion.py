@@ -172,9 +172,6 @@ def generar_contrasenas_seguras(cantidad: int, length: int = 12, require_upper: 
 
 
 def validar_generado(nombre: str, palabra: str) -> bool:
-    """Validación pública para usos desde UI y motor.
-    Mantiene la lógica previa de `_validar_generado`.
-    """
     if palabra is None:
         return False
     if nombre == 'usuario':
