@@ -126,7 +126,6 @@ class InterfazGramaticas(tk.Tk):
                 return
             extra['length'] = length
 
-        # Buttons will be disabled in the worker scheduling and re-enabled after completion
 
         def worker(extra):
             try:
